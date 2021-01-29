@@ -1,0 +1,13 @@
+*.pyc
+
+### WORKSPACE LOCATIONS ###
+venv/
+.vscode/
+
+### CACHES ###
+__pycache__/
+**/static/COMPILED/
+.sass-cache/
+
+### DB ###
+db.sqlite3

@@ -1,0 +1,15 @@
+{% extends 'kansas/base.html' %}
+{% load compile_static %}
+{% load static %}
+
+{% block content-single %}
+{% if recipes_list %}
+    <ul>
+    {% for recipe in recipes_list %}
+        <li><a href="{% url 'kansas:recipe' recipe.id %}">{{ recipe.display_name }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No recipes are available.</p>
+{% endif %}
+{% endblock %}

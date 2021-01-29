@@ -1,0 +1,43 @@
+{% extends 'kansas/base.html' %}
+
+{% block content-single %}
+<h1>{{ recipe.display_name }}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+Servings: {{ recipe.servings }}
+
+<h2>Macros per portion</h2>
+<ul>
+    <li>{{ recipe.calories_pp }} kcal</li>
+    <li>{{ recipe.grams_protein_pp }}g Protein</li>
+    <li>{{ recipe.grams_carbs_pp }}g Carbs</li>
+    <li>{{ recipe.grams_fat_pp }}g Fat</li>
+    <li>{{ recipe.grams_fibre_pp }}g Fibre</li>
+</ul>
+
+<h2>Ingredients</h2>
+<ul>
+{% for ingredient in recipe.recipeingredient_set.all %}
+    <li>{{ ingredient.ingredient.display_name }} {{ ingredient.quantity }}{{ ingredient.unit.abbreviation }}</li>
+{% endfor %}
+</ul>
+<form action="{% url 'kansas:add_ingredient' recipe.id %}" method="post">
+    {% csrf_token %}
+    <label for="ingredient">Add ingredient:</label>
+    <select name="ingredient" id="ingredient">
+    {% for ingredient in ingredients %}
+        <option value="{{ ingredient.id }}">{{ ingredient.display_name }}</option>
+    {% endfor %}
+    </select>
+
+    <label for="quantity">Quantity:</label>
+    <input name="quantity" id="quantity">
+    <select name="unit" id="unit">
+    {% for unit in units %}
+        <option value="{{ unit.id }}">{{ unit }}</option>
+    {% endfor %}
+    </select>
+    <input type="submit" value="Add">
+</form>
+{% endblock %}

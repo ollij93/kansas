@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% load compile_static %}
+{% load static %}
+
+{% block links %}
+<link rel="stylesheet" type="text/css" href="{% static 'core/style.scss'|compile %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'kansas/style.scss'|compile %}" />
+{% endblock %}
+
+{% block header %}
+<header>
+    <h1><a href="{% url 'kansas:index' %}">Kansas</a></h1>
+    <nav>
+    </nav>
+</header>
+{% endblock %}
