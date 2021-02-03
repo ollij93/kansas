@@ -1,0 +1,115 @@
+{% extends 'kansas/base.html' %}
+
+{% block content-single %}
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'kansas:save_recipe' recipe.id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Save">
+    <input type="button" onclick="location.href='{% url 'kansas:recipe' recipe.id %}';" value="Cancel">
+    <h1><input name="display_name" id="display_name" value="{{ recipe.display_name }}"></h1>
+
+    <label for="servings">Servings: </label>
+    <input name="servings" id="servings" value="{{ recipe.servings }}">
+    
+    <h2>Macros per portion</h2>
+    <div style="display: grid; grid-template-columns: auto 1fr; grid-column-gap: 1rem;">
+        <div>Calories:</div>
+        <div><input name="calories" id="calories" value="{{ recipe.calories_pp }}">kcal</div>
+        <div>Protein:</div>
+        <div><input name="protein" id="protein" value="{{ recipe.grams_protein_pp }}">g</div>
+        <div>Carbs:</div>
+        <div><input name="carbs" id="carbs" value="{{ recipe.grams_carbs_pp }}">g</div>
+        <div>Fat:</div>
+        <div><input name="fat" id="fat" value="{{ recipe.grams_fat_pp }}">g</div>
+        <div>Fibre:</div>
+        <div><input name="fibre" id="fibre" value="{{ recipe.grams_fibre_pp }}">g</div>
+    </div>
+
+    <h2>Ingredients</h2>
+    <script>
+        // @@@ - TODO: Use a separate JSON request for this?
+        const ING_OPTIONS = [
+        {% for ingredient in ingredients %}
+            [{{ ingredient.id }}, "{{ ingredient.display_name}}"],
+        {% endfor %}
+        ];
+        const UNIT_OPTIONS = [
+        {% for unit in units %}
+            [{{ unit.id }}, "{{ unit }}"],
+        {% endfor %}
+        ];
+
+        let num_ingredients = 0;
+        function add_ingredient(selected_ingredient=-1,
+                                quantity=0,
+                                selected_unit=-1) {
+            num_ingredients += 1;
+            let newLi = document.createElement("li");
+            newLi.id = "li_ing" + num_ingredients;
+
+            let newSelectIng = document.createElement("select");
+            newSelectIng.id = "ingredient_" + num_ingredients;
+            newSelectIng.name = "ingredient_" + num_ingredients;
+            newLi.appendChild(newSelectIng);
+
+            ING_OPTIONS.forEach((opt) => {
+                let newOpt = document.createElement("option");
+                newOpt.value = opt[0];
+                newOpt.selected = (selected_ingredient == opt[0]) ? "selected" : "";
+                newOpt.appendChild(document.createTextNode(opt[1]));
+                newSelectIng.appendChild(newOpt);
+            });
+
+            let newLabelQuantity = document.createElement("label");
+            newLabelQuantity.for = "quantity_" + num_ingredients;
+            newLabelQuantity.appendChild(document.createTextNode("Quantity:"));
+            newLi.appendChild(newLabelQuantity);
+
+            let newInputQuantity = document.createElement("input");
+            newInputQuantity.id = "quantity_" + num_ingredients;
+            newInputQuantity.name = "quantity_" + num_ingredients;
+            newInputQuantity.value = quantity;
+            newLi.appendChild(newInputQuantity);
+
+            let newSelectUnit = document.createElement("select");
+            newSelectUnit.id = "unit_" + num_ingredients;
+            newSelectUnit.name = "unit_" + num_ingredients;
+            newLi.appendChild(newSelectUnit);
+
+            UNIT_OPTIONS.forEach((opt) => {
+                let newOpt = document.createElement("option");
+                newOpt.value = opt[0];
+                newOpt.selected = (selected_unit == opt[0]) ? "selected" : "";
+
+                newOpt.appendChild(document.createTextNode(opt[1]));
+                newSelectUnit.appendChild(newOpt);
+            });
+
+            let newButton = document.createElement("button");
+            newButton.type = "button";
+            newButton.appendChild(document.createTextNode("Remove"));
+            newButton.onclick = function () {
+                newLi.remove();
+            }
+            newLi.appendChild(newButton);
+
+            document.getElementById("ingredient_list").appendChild(newLi);
+        }
+
+        window.onload = function() {
+        {% for recipeingredient in recipe.recipeingredient_set.all %}
+            add_ingredient(
+                {{ recipeingredient.ingredient.id }},
+                {{ recipeingredient.quantity }},
+                {{ recipeingredient.unit.id }},
+                );
+        {% endfor %}
+        };
+    </script>
+    <ul id="ingredient_list">
+    </ul>
+    <button type="button" onclick="add_ingredient()">Add</button>
+
+</form>
+{% endblock %}
