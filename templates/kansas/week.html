@@ -1,0 +1,50 @@
+{% extends 'kansas/base.html' %}
+
+{% block content-single %}
+<h1>Calendar</h1>
+
+<div id="calendar-list">
+{% for day in days %}
+<div {% if day.today %}class="today"{% endif %}>
+    <!--{{ day }}-->
+    <h3>{{ day.date }}</h3>
+    <hr>
+    <div class="calendar-entry">
+        <div>
+            <p>
+                B: {{ day.meals.B.display_name|default:"" }}
+                {% if day.meals.B %}
+                <a href="{% url 'kansas:recipe' day.meals.B.recipe.id %}">
+                    {{ day.meals.B.recipe.display_name }}
+                </a>
+                {% endif %}
+            </p>
+            <p>
+                L: {{ day.meals.L.display_name|default:"" }}
+                {% if day.meals.L %}
+                <a href="{% url 'kansas:recipe' day.meals.L.recipe.id %}">
+                    {{ day.meals.L.recipe.display_name }}
+                </a>
+                {% endif %}
+            </p>
+            <p>
+                D:
+                {% if day.meals.D %}
+                <a href="{% url 'kansas:recipe' day.meals.D.recipe.id %}">
+                    {{ day.meals.D.recipe.display_name }}
+                </a>
+                {% endif %}
+            </p>
+        </div>
+        <div class="calendar-macros">
+            <div>Calories:</div> <div>{{ day.calories }}kcal</div>
+            <div>Protein:</div> <div>{{ day.protein }}g</div>
+            <div>Carbs:</div> <div>{{ day.carbs }}g</div>
+            <div>Fat:</div> <div>{{ day.fat }}g</div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+{% endblock %}

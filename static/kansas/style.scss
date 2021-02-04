@@ -45,3 +45,29 @@
     --secondary-dark-link: var(--secondary-light);
     --secondary-dark-highlight: var(--primary-mid-light);
 }
+
+#calendar-list {
+    > div {
+        @extend .background-secondary;
+        padding: 1rem;
+        margin: 0.2rem;
+
+        .calendar-entry {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+
+            .calendar-macros {
+                display: grid;
+                grid-template-columns: auto auto;
+            }
+        }
+
+        > h3 {
+            margin: 0;
+        }
+
+        &.today {
+            @extend .background-primary;
+        }
+    }
+}

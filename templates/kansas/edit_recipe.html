@@ -3,10 +3,20 @@
 {% block content-single %}
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form action="{% url 'kansas:save_recipe' recipe.id %}" method="post">
+<form action="{% if recipe.id %}
+    {% url 'kansas:save_recipe' recipe.id %}
+{% else %}
+    {% url 'kansas:save_new_recipe' %}
+{% endif %}" method="post">
     {% csrf_token %}
     <input type="submit" value="Save">
-    <input type="button" onclick="location.href='{% url 'kansas:recipe' recipe.id %}';" value="Cancel">
+    <input type="button" onclick="location.href='
+{% if recipe.id %}
+    {% url 'kansas:recipe' recipe.id %}
+{% else %}
+    {% url 'kansas:index' %}
+{% endif %}
+    ';" value="Cancel">
     <h1><input name="display_name" id="display_name" value="{{ recipe.display_name }}"></h1>
 
     <label for="servings">Servings: </label>
@@ -22,8 +32,6 @@
         <div><input name="carbs" id="carbs" value="{{ recipe.grams_carbs_pp }}">g</div>
         <div>Fat:</div>
         <div><input name="fat" id="fat" value="{{ recipe.grams_fat_pp }}">g</div>
-        <div>Fibre:</div>
-        <div><input name="fibre" id="fibre" value="{{ recipe.grams_fibre_pp }}">g</div>
     </div>
 
     <h2>Ingredients</h2>

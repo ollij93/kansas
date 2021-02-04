@@ -1,42 +1,61 @@
+import datetime 
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from .models import Recipe, Ingredient, RecipeIngredient, Unit
+from .models import Recipe, Ingredient, RecipeIngredient, Unit, Meal
 
 def index(request):
-    recipes_list = Recipe.objects.all()
-    context = {
-        'recipes_list': recipes_list,
-    }
-    return render(request, 'kansas/index.html', context)
+    return HttpResponseRedirect(reverse("kansas:week"))
 
-def recipe(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id)
-    ingredients = Ingredient.objects.all()
-    units = Unit.objects.all()
-    return render(request, 'kansas/recipe.html', {
-        'recipe': recipe,
-        'ingredients': ingredients,
-        'units': units,
+def week(request):
+    def get_meal_or_none(*, meal=None, date=None):
+        try:
+            return Meal.objects.get(meal=meal, date=date)
+        except Meal.DoesNotExist:
+            return None
+
+    today = datetime.date.today()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    days=[]
+    for dow in range(7):
+        date = (start_of_week + datetime.timedelta(days=dow)).strftime("%Y-%m-%d")
+        day = {
+            "date": date,
+            "today": date == today.strftime("%Y-%m-%d"),
+            "meals": {
+                m: get_meal_or_none(meal=m, date=date)
+                for m in ["B", "L", "D"]
+            },
+        }
+        day["calories"] = sum([
+            m.recipe.calories_pp
+            for m in day["meals"].values()
+            if m is not None
+        ])
+        day["protein"] = sum([
+            m.recipe.grams_protein_pp
+            for m in day["meals"].values()
+            if m is not None
+        ])
+        day["carbs"] = sum([
+            m.recipe.grams_carbs_pp
+            for m in day["meals"].values()
+            if m is not None
+        ])
+        day["fat"] = sum([
+            m.recipe.grams_fat_pp
+            for m in day["meals"].values()
+            if m is not None
+        ])
+        days.append(day)
+    return render(request, 'kansas/week.html', {
+        'days': days,
     })
 
-@login_required
-def edit_recipe(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id)
-    ingredients = Ingredient.objects.all()
-    units = Unit.objects.all()
-    return render(request, 'kansas/edit_recipe.html', {
-        'recipe': recipe,
-        'ingredients': ingredients,
-        'units': units,
-    })
-
-@login_required
-def save_recipe(request, recipe_id):
-    recipe: Recipe = get_object_or_404(Recipe, pk=recipe_id)
-
+def _save_recipe_from_request(recipe, request):
     # @@@ - TODO: Make this slightly more robust about form items missing
     ingredients = []
     for identifier in [k for k in request.POST.keys()
@@ -81,11 +100,49 @@ def save_recipe(request, recipe_id):
 
     recipe.display_name = request.POST.get('display_name', recipe.display_name)
     recipe.servings = request.POST.get('servings', recipe.servings)
-    recipe.calories_pp = request.POST.get('calores', recipe.calories_pp)
+    recipe.calories_pp = request.POST.get('calories', recipe.calories_pp)
     recipe.grams_protein_pp = request.POST.get('protein', recipe.grams_protein_pp)
     recipe.grams_carbs_pp = request.POST.get('carbs', recipe.grams_carbs_pp)
     recipe.grams_fat_pp = request.POST.get('fat', recipe.grams_fat_pp)
-    recipe.grams_fibre_pp = request.POST.get('fibre', recipe.grams_fibre_pp)
 
     recipe.save()
-    return HttpResponseRedirect(reverse('kansas:recipe', args=(recipe_id,)))
+    return HttpResponseRedirect(reverse('kansas:recipe', args=(recipe.id,)))
+
+def new_recipe(request):
+    recipe = Recipe()
+    ingredients = Ingredient.objects.all()
+    units = Unit.objects.all()
+    return render(request, 'kansas/edit_recipe.html', {
+        'recipe': recipe,
+        'ingredients': ingredients,
+        'units': units,
+    })
+
+def recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    ingredients = Ingredient.objects.all()
+    units = Unit.objects.all()
+    return render(request, 'kansas/recipe.html', {
+        'recipe': recipe,
+        'ingredients': ingredients,
+        'units': units,
+    })
+
+@login_required
+def edit_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    ingredients = Ingredient.objects.all()
+    units = Unit.objects.all()
+    return render(request, 'kansas/edit_recipe.html', {
+        'recipe': recipe,
+        'ingredients': ingredients,
+        'units': units,
+    })
+
+@login_required
+def save_recipe(request, recipe_id=None):
+    if recipe_id is not None:
+        recipe: Recipe = get_object_or_404(Recipe, pk=recipe_id)
+    else:
+        recipe: Recipe = Recipe.objects.create()
+    return _save_recipe_from_request(recipe, request)

@@ -23,7 +23,6 @@ class Recipe(models.Model):
     grams_protein_pp = models.FloatField(default=0)
     grams_carbs_pp = models.FloatField(default=0)
     grams_fat_pp = models.FloatField(default=0)
-    grams_fibre_pp = models.FloatField(default=0)
 
     def __str__(self):
         return (f"{self.display_name} "
@@ -40,3 +39,14 @@ class RecipeIngredient(models.Model):
 
     def __str__(self):
         return f"{self.quantity}{self.unit.abbreviation} {self.ingredient}"
+
+class Meal(models.Model):
+    MEALS = [('B', 'Breakfast'),
+             ('L', 'Lunch'),
+             ('D', 'Dinner')]
+    date = models.DateField()
+    meal = models.CharField(max_length=9, choices=MEALS, default='D')
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('date', 'meal')
